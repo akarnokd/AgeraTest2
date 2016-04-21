@@ -19,6 +19,7 @@ import com.google.android.agera.Repositories;
 import com.google.android.agera.UpdateDispatcher;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -118,6 +119,7 @@ public class MainActivity extends AppCompatActivity {
                 .doAfterTerminate(() -> {
                     TextView tw2 = (TextView)findViewById(R.id.textView);
                     tw2.append("Done: " + list.size() + "\n");
+                    tw2.append("~ unique: " + new HashSet<>(list).size() + "\n");
                     long t1 = System.currentTimeMillis() - t;
                     tw2.append("Time: " + t1 + " ms\n");
                 })
@@ -162,6 +164,7 @@ public class MainActivity extends AppCompatActivity {
                 .doAfterTerminate(() -> {
                     TextView tw2 = (TextView)findViewById(R.id.textView);
                     tw2.append("Done: " + list.size() + "\n");
+                    tw2.append("~ unique: " + new HashSet<>(list).size() + "\n");
                     long t1 = System.currentTimeMillis() - t;
                     tw2.append("Time: " + t1 + " ms\n");
                 })
