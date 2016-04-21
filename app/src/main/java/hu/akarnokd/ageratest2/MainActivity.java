@@ -152,7 +152,6 @@ public class MainActivity extends AppCompatActivity {
             ps.subscribe(v -> list.add(v));
             tw.append("\n");
         }
-        tw.append("\n");
 
         Observable.range(1, n)
                 .subscribeOn(Schedulers.computation())
