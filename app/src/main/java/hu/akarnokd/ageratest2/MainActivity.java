@@ -21,6 +21,7 @@ import java.util.concurrent.TimeUnit;
 import rx.Observable;
 import rx.android.schedulers.AndroidSchedulers;
 import rx.schedulers.Schedulers;
+import rx.subjects.BehaviorSubject;
 import rx.subjects.PublishSubject;
 
 public class MainActivity extends AppCompatActivity {
@@ -84,8 +85,6 @@ public class MainActivity extends AppCompatActivity {
 
         tw.append("\nHi Agera\r\n");
 
-        UpdateDispatcher ud = Observables.updateDispatcher();
-
         MutableRepository<Integer> repo = Repositories.mutableRepository(0);
 
         List<Integer> list = new ArrayList<>();
@@ -117,7 +116,7 @@ public class MainActivity extends AppCompatActivity {
 
         tw.append("\nHi Rx\r\n");
 
-        PublishSubject<Integer> ps = PublishSubject.create();
+        BehaviorSubject<Integer> ps = BehaviorSubject.create(0);
 
         List<Integer> list = new ArrayList<>();
 
