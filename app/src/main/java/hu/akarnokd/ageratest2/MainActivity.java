@@ -7,6 +7,10 @@ import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.ArrayAdapter;
+import android.widget.Spinner;
+import android.widget.SpinnerAdapter;
+import android.widget.Switch;
 import android.widget.TextView;
 
 import com.google.android.agera.MutableRepository;
@@ -53,6 +57,16 @@ public class MainActivity extends AppCompatActivity {
         findViewById(R.id.button3).setOnClickListener(v -> {
             ((TextView)findViewById(R.id.textView)).setText("");
         });
+
+        Integer[] array = new Integer[] { 1, 10, 100, 1000, 10000, 100000 };
+
+        SpinnerAdapter sa = new ArrayAdapter<Integer>(this, android.R.layout.simple_spinner_item,
+                array);
+
+        Spinner sp = (Spinner)findViewById(R.id.spinner);
+        sp.setAdapter(sa);
+
+        sp.setSelection(array.length - 1);
     }
 
     @Override
@@ -83,6 +97,10 @@ public class MainActivity extends AppCompatActivity {
 
         TextView tw = (TextView)findViewById(R.id.textView);
 
+        Spinner sp = (Spinner)findViewById(R.id.spinner);
+
+        int n = (Integer)sp.getSelectedItem();
+
         tw.append("\nHi Agera\r\n");
 
         MutableRepository<Integer> repo = Repositories.mutableRepository(0);
@@ -91,7 +109,7 @@ public class MainActivity extends AppCompatActivity {
 
         repo.addUpdatable(() -> list.add(repo.get()));
 
-        Observable.range(1, 100000)
+        Observable.range(1, n)
                 .subscribeOn(Schedulers.computation())
                 .doOnNext(v -> repo.accept(v))
                 .ignoreElements()
@@ -110,19 +128,33 @@ public class MainActivity extends AppCompatActivity {
 
     void rx() {
 
+        Spinner sp = (Spinner)findViewById(R.id.spinner);
+
+        int n = (Integer)sp.getSelectedItem();
+
         long t = System.currentTimeMillis();
 
         TextView tw = (TextView)findViewById(R.id.textView);
 
-        tw.append("\nHi Rx\r\n");
+        tw.append("\nHi Rx");
 
-        BehaviorSubject<Integer> ps = BehaviorSubject.create(0);
+        BehaviorSubject<Integer> ps = BehaviorSubject.create();
 
         List<Integer> list = new ArrayList<>();
 
-        ps.subscribe(v -> list.add(v));
+        Switch sw = (Switch)findViewById(R.id.switch1);
 
-        Observable.range(1, 100000)
+        if (sw.isChecked()) {
+            ps.observeOn(AndroidSchedulers.mainThread(), false, n)
+                    .subscribe(v -> list.add(v));
+            tw.append(" (observeOn)\n");
+        } else {
+            ps.subscribe(v -> list.add(v));
+            tw.append("\n");
+        }
+        tw.append("\n");
+
+        Observable.range(1, n)
                 .subscribeOn(Schedulers.computation())
                 .doOnNext(v -> ps.onNext(v))
                 .ignoreElements()
