@@ -21,8 +21,12 @@ import com.google.android.agera.UpdateDispatcher;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
+import hu.akarnokd.agera.Agera;
+import hu.akarnokd.agera.BehaviorMutableRepository;
 import rx.Observable;
 import rx.android.schedulers.AndroidSchedulers;
 import rx.schedulers.Schedulers;
@@ -57,6 +61,10 @@ public class MainActivity extends AppCompatActivity {
 
         findViewById(R.id.button3).setOnClickListener(v -> {
             ((TextView)findViewById(R.id.textView)).setText("");
+        });
+
+        findViewById(R.id.button4).setOnClickListener(v -> {
+            rxagera();
         });
 
         Integer[] array = new Integer[] { 1, 10, 100, 1000, 10000, 100000 };
@@ -173,4 +181,50 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
+    void rxagera() {
+
+        BehaviorMutableRepository<Integer> repo = new BehaviorMutableRepository<>();
+
+        Spinner sp = (Spinner)findViewById(R.id.spinner);
+
+        int n = (Integer)sp.getSelectedItem();
+
+        long t = System.currentTimeMillis();
+
+        TextView tw = (TextView)findViewById(R.id.textView);
+
+        tw.append("\nHi RxAgera");
+
+        List<Integer> list = new ArrayList<>();
+
+        Switch sw = (Switch)findViewById(R.id.switch1);
+
+        if (sw.isChecked()) {
+            repo.observeOnMain()
+                    .consume(() -> list.add(repo.get()));
+            tw.append(" (observeOn)\n");
+        } else {
+            repo.consume(() -> list.add(repo.get()));
+            tw.append("\n");
+        }
+
+        int[] v = { 0 };
+
+        Observable.range(1, n)
+                .subscribeOn(Schedulers.computation())
+                .doOnNext(e -> repo.accept(v[0]++))
+                .ignoreElements()
+                .delay(100, TimeUnit.MILLISECONDS)
+                .observeOn(AndroidSchedulers.mainThread())
+                .doAfterTerminate(() -> {
+                    TextView tw2 = (TextView)findViewById(R.id.textView);
+                    tw2.append("Done: " + list.size() + "\n");
+                    tw2.append("~ unique: " + new HashSet<>(list).size() + "\n");
+                    long t1 = System.currentTimeMillis() - t;
+                    tw2.append("Time: " + t1 + " ms\n");
+                })
+                .subscribe()
+        ;
+
+    }
 }
