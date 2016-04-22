@@ -27,6 +27,7 @@ import java.util.concurrent.TimeUnit;
 
 import hu.akarnokd.agera.Agera;
 import hu.akarnokd.agera.BehaviorMutableRepository;
+import hu.akarnokd.rxjava2.Scheduler;
 import rx.Observable;
 import rx.android.schedulers.AndroidSchedulers;
 import rx.schedulers.Schedulers;
@@ -65,6 +66,10 @@ public class MainActivity extends AppCompatActivity {
 
         findViewById(R.id.button4).setOnClickListener(v -> {
             rxagera();
+        });
+
+        findViewById(R.id.button5).setOnClickListener(v -> {
+            rx2();
         });
 
         Integer[] array = new Integer[] { 1, 10, 100, 1000, 10000, 100000 };
@@ -227,4 +232,52 @@ public class MainActivity extends AppCompatActivity {
         ;
 
     }
+
+    void rx2() {
+
+        Spinner sp = (Spinner)findViewById(R.id.spinner);
+
+        int n = (Integer)sp.getSelectedItem();
+
+        long t = System.currentTimeMillis();
+
+        TextView tw = (TextView)findViewById(R.id.textView);
+
+        tw.append("\nHi Rx2");
+
+        hu.akarnokd.rxjava2.subjects.BehaviorSubject<Integer> ps = hu.akarnokd.rxjava2.subjects.BehaviorSubject.create();
+
+        List<Integer> list = new ArrayList<>();
+
+        Switch sw = (Switch)findViewById(R.id.switch1);
+
+        Scheduler mainThread = RxJava2MainThread.INSTANCE;
+
+        if (sw.isChecked()) {
+            ps.observeOn(mainThread, false, n)
+                    .subscribe(v -> list.add(v));
+            tw.append(" (observeOn)\n");
+        } else {
+            ps.subscribe(v -> list.add(v));
+            tw.append("\n");
+        }
+
+        hu.akarnokd.rxjava2.Observable.range(1, n)
+                .subscribeOn(hu.akarnokd.rxjava2.schedulers.Schedulers.computation())
+                .doOnNext(v -> ps.onNext(v))
+                .ignoreElements()
+                .delay(100, TimeUnit.MILLISECONDS)
+                .observeOn(mainThread)
+                .doAfterTerminate(() -> {
+                    TextView tw2 = (TextView)findViewById(R.id.textView);
+                    tw2.append("Done: " + list.size() + "\n");
+                    tw2.append("~ unique: " + new HashSet<>(list).size() + "\n");
+                    long t1 = System.currentTimeMillis() - t;
+                    tw2.append("Time: " + t1 + " ms\n");
+                })
+                .subscribe()
+        ;
+
+    }
+
 }
