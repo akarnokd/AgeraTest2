@@ -1,5 +1,6 @@
 package hu.akarnokd.ageratest2;
 
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AppCompatActivity;
@@ -72,7 +73,11 @@ public class MainActivity extends AppCompatActivity {
             rx2();
         });
 
-        Integer[] array = new Integer[] { 1, 10, 100, 1000, 10000, 100000 };
+        findViewById(R.id.button6).setOnClickListener(v -> {
+            asynctask();
+        });
+
+        Integer[] array = new Integer[]{1, 10, 100, 1000, 10000, 100000};
 
         SpinnerAdapter sa = new ArrayAdapter<Integer>(this, android.R.layout.simple_spinner_item,
                 array);
@@ -278,6 +283,65 @@ public class MainActivity extends AppCompatActivity {
                 .subscribe()
         ;
 
+    }
+
+    void asynctask() {
+
+        Spinner sp = (Spinner) findViewById(R.id.spinner);
+
+        int n = (Integer) sp.getSelectedItem();
+
+        TextView tw = (TextView) findViewById(R.id.textView);
+
+        tw.append("\nHi AsyncTask");
+
+        tw.append("\n");
+
+        new AsyncTaskOperation().execute(n);
+
+    }
+
+    private class AsyncTaskOperation extends AsyncTask<Integer, Integer, String> {
+
+        List<Integer> list;
+
+        long t;
+
+        @Override
+        protected String doInBackground(Integer... params) {
+            int size = params[0];
+
+            for (int i = 0; i < size; i++) {
+                publishProgress(i);
+            }
+            return "Executed";
+        }
+
+        @Override
+        protected void onPostExecute(String result) {
+            try {
+                Thread.sleep(100);
+            } catch (InterruptedException e) {
+                Thread.interrupted();
+            }
+
+            TextView tw2 = (TextView) findViewById(R.id.textView);
+            tw2.append("Done: " + list.size() + "\n");
+            tw2.append("~ unique: " + new HashSet<>(list).size() + "\n");
+            long t1 = System.currentTimeMillis() - t;
+            tw2.append("Time: " + t1 + " ms\n");
+        }
+
+        @Override
+        protected void onPreExecute() {
+            list = new ArrayList<>();
+            t = System.currentTimeMillis();
+        }
+
+        @Override
+        protected void onProgressUpdate(Integer... values) {
+            list.add(values[0]);
+        }
     }
 
 }
