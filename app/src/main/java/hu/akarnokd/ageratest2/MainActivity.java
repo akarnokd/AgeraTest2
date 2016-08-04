@@ -28,7 +28,7 @@ import java.util.concurrent.TimeUnit;
 
 import hu.akarnokd.agera.Agera;
 import hu.akarnokd.agera.BehaviorMutableRepository;
-import hu.akarnokd.rxjava2.Scheduler;
+import io.reactivex.Scheduler;
 import rx.Observable;
 import rx.android.schedulers.AndroidSchedulers;
 import rx.schedulers.Schedulers;
@@ -76,6 +76,15 @@ public class MainActivity extends AppCompatActivity {
         findViewById(R.id.button6).setOnClickListener(v -> {
             asynctask();
         });
+
+        findViewById(R.id.button7).setOnClickListener(v -> {
+            rx2Obs();
+        });
+
+        findViewById(R.id.button8).setOnClickListener(v -> {
+            rxObs();
+        });
+
 
         Integer[] array = new Integer[]{1, 10, 100, 1000, 10000, 100000};
 
@@ -191,6 +200,51 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
+    void rxObs() {
+
+        Spinner sp = (Spinner)findViewById(R.id.spinner);
+
+        int n = (Integer)sp.getSelectedItem();
+
+        long t = System.currentTimeMillis();
+
+        TextView tw = (TextView)findViewById(R.id.textView);
+
+        tw.append("\nHi Rx");
+
+        PublishSubject<Integer> ps = PublishSubject.create();
+
+        List<Integer> list = new ArrayList<>();
+
+        Switch sw = (Switch)findViewById(R.id.switch1);
+
+        if (sw.isChecked()) {
+            ps.observeOn(AndroidSchedulers.mainThread(), false, n)
+                    .subscribe(v -> list.add(v));
+            tw.append(" (observeOn)\n");
+        } else {
+            ps.subscribe(v -> list.add(v));
+            tw.append("\n");
+        }
+
+        Observable.range(1, n)
+                .subscribeOn(Schedulers.computation())
+                .doOnNext(v -> ps.onNext(v))
+                .ignoreElements()
+                .delay(100, TimeUnit.MILLISECONDS)
+                .observeOn(AndroidSchedulers.mainThread())
+                .doAfterTerminate(() -> {
+                    TextView tw2 = (TextView)findViewById(R.id.textView);
+                    tw2.append("Done: " + list.size() + "\n");
+                    tw2.append("~ unique: " + new HashSet<>(list).size() + "\n");
+                    long t1 = System.currentTimeMillis() - t;
+                    tw2.append("Time: " + t1 + " ms\n");
+                })
+                .subscribe()
+        ;
+
+    }
+
     void rxagera() {
 
         BehaviorMutableRepository<Integer> repo = new BehaviorMutableRepository<>();
@@ -250,7 +304,8 @@ public class MainActivity extends AppCompatActivity {
 
         tw.append("\nHi Rx2");
 
-        hu.akarnokd.rxjava2.subjects.BehaviorSubject<Integer> ps = hu.akarnokd.rxjava2.subjects.BehaviorSubject.create();
+        //io.reactivex.processors.BehaviorProcessor<Integer> ps = io.reactivex.processors.BehaviorProcessor.create();
+        io.reactivex.processors.PublishProcessor<Integer> ps = io.reactivex.processors.PublishProcessor.create();
 
         List<Integer> list = new ArrayList<>();
 
@@ -267,8 +322,56 @@ public class MainActivity extends AppCompatActivity {
             tw.append("\n");
         }
 
-        hu.akarnokd.rxjava2.Observable.range(1, n)
-                .subscribeOn(hu.akarnokd.rxjava2.schedulers.Schedulers.computation())
+        io.reactivex.Flowable.range(1, n)
+                .subscribeOn(io.reactivex.schedulers.Schedulers.computation())
+                .doOnNext(v -> ps.onNext(v))
+                .ignoreElements()
+                .delay(100, TimeUnit.MILLISECONDS)
+                .observeOn(mainThread)
+                .doAfterTerminate(() -> {
+                    TextView tw2 = (TextView)findViewById(R.id.textView);
+                    tw2.append("Done: " + list.size() + "\n");
+                    tw2.append("~ unique: " + new HashSet<>(list).size() + "\n");
+                    long t1 = System.currentTimeMillis() - t;
+                    tw2.append("Time: " + t1 + " ms\n");
+                })
+                .subscribe()
+        ;
+
+    }
+
+    void rx2Obs() {
+
+        Spinner sp = (Spinner)findViewById(R.id.spinner);
+
+        int n = (Integer)sp.getSelectedItem();
+
+        long t = System.currentTimeMillis();
+
+        TextView tw = (TextView)findViewById(R.id.textView);
+
+        tw.append("\nHi Rx2Obs");
+
+        //io.reactivex.subjects.BehaviorSubject<Integer> ps = io.reactivex.subjects.BehaviorSubject.create();
+        io.reactivex.subjects.PublishSubject<Integer> ps = io.reactivex.subjects.PublishSubject.create();
+
+        List<Integer> list = new ArrayList<>();
+
+        Switch sw = (Switch)findViewById(R.id.switch1);
+
+        Scheduler mainThread = RxJava2MainThread.INSTANCE;
+
+        if (sw.isChecked()) {
+            ps.observeOn(mainThread, false, n)
+                    .subscribe(v -> list.add(v));
+            tw.append(" (observeOn)\n");
+        } else {
+            ps.subscribe(v -> list.add(v));
+            tw.append("\n");
+        }
+
+        io.reactivex.Flowable.range(1, n)
+                .subscribeOn(io.reactivex.schedulers.Schedulers.computation())
                 .doOnNext(v -> ps.onNext(v))
                 .ignoreElements()
                 .delay(100, TimeUnit.MILLISECONDS)

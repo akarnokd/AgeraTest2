@@ -5,9 +5,10 @@ import android.os.Looper;
 
 import java.util.concurrent.TimeUnit;
 
-import hu.akarnokd.rxjava2.Scheduler;
-import hu.akarnokd.rxjava2.disposables.Disposable;
-import hu.akarnokd.rxjava2.internal.disposables.EmptyDisposable;
+import io.reactivex.Scheduler;
+import io.reactivex.disposables.Disposable;
+import io.reactivex.disposables.Disposables;
+import io.reactivex.internal.disposables.EmptyDisposable;
 
 /**
  * Main thread scheduler for RxJava 2
@@ -41,13 +42,18 @@ public final class RxJava2MainThread extends Scheduler {
                 handler.removeCallbacks(run);
                 return EmptyDisposable.INSTANCE;
             }
-            return () -> handler.removeCallbacks(run);
+            return Disposables.from(() -> handler.removeCallbacks(run));
         }
 
         @Override
         public void dispose() {
             disposed = true;
             handler.removeCallbacksAndMessages(null);
+        }
+
+        @Override
+        public boolean isDisposed() {
+            return disposed;
         }
     }
 }
